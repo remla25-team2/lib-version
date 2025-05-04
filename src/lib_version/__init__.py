@@ -1,3 +1,3 @@
-from version_util import VersionUtil
+from .version_util import VersionUtil
 
 __version__ = VersionUtil.get_version()
