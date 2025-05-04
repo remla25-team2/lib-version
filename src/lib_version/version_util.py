@@ -3,17 +3,28 @@ import subprocess
 class VersionUtil:
     @staticmethod
     def get_version():
-        """
-        Returns the latest Git tag, or falls back to short commit hash.
-        """
+        """Get version from git tag or fallback to version file if available."""
         try:
-            version = subprocess.check_output(
+            # Try to get version from git tag
+            git_tag = subprocess.check_output(
                 ["git", "describe", "--tags", "--abbrev=0"],
                 stderr=subprocess.DEVNULL
-            ).decode().strip()
-        except subprocess.CalledProcessError:
-            version = VersionUtil.get_commit_hash()
-        return version
+            ).decode("utf-8").strip()
+            
+            # Remove 'v' prefix if present
+            if git_tag.startswith('v'):
+                git_tag = git_tag[1:]
+            
+            return git_tag
+        except:
+            # Fallback to version.json if available
+            version_file = os.path.join(os.path.dirname(__file__), "version.json")
+            if os.path.exists(version_file):
+                with open(version_file) as f:
+                    return json.load(f)["version"]
+            
+            # Default version if all else fails
+            return "0.0.0"
 
     @staticmethod
     def get_commit_hash():

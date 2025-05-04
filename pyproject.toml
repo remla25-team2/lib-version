@@ -1,6 +1,5 @@
 [project]
 name = "lib_version"
-version = "0.0.0"
 description = "Library for versioning"
 authors = [{ name="Angelos Mangos", email="aemangos@tudelft.nl" }]
 readme = "README.md"
@@ -10,6 +9,10 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = {attr = "lib_version.__version__"}
 
 [build-system]
 requires = ["setuptools >= 77.0.3"]
