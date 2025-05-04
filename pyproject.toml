@@ -15,5 +15,5 @@ dynamic = ["version"]
 version = {attr = "lib_version.__version__"}
 
 [build-system]
-requires = ["setuptools >= 77.0.3"]
+requires = ["setuptools >= 77.0.3", "wheel"]
 build-backend = "setuptools.build_meta"
