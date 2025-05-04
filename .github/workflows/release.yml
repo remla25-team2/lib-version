@@ -26,6 +26,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip build
 
+    - name: Install package in development mode
+      run: pip install -e .
+
     - name: Write version metadata
       run: |
           python scripts/write_version.py
