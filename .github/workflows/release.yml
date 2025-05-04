@@ -27,7 +27,9 @@ jobs:
         python -m pip install --upgrade pip build
 
     - name: Write version metadata
-      run: python scripts/write_version.py
+      run: |
+        python scripts/write_version.py
+        cat src/lib_version/version.json  # Debug output
 
     - name: Build the package
       run: python -m build
