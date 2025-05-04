@@ -9,3 +9,20 @@
 - Retrieve additional metadata such as the current branch and commit hash.
 - Automatically write version metadata to a JSON file during the build process.
 - Seamless integration with GitHub Actions for automated releases.
+
+
+# Usage
+Accessing Version Information
+You can access version information programmatically using the `VersionUtil` class:
+
+```python
+from lib_version.version_util import VersionUtil
+
+# Get the latest version (Git tag or commit hash)
+version = VersionUtil.get_version()
+print(f"Version: {version}")
+
+# Get additional metadata
+metadata = VersionUtil.get_metadata()
+print(f"Metadata: {metadata}")
+```
