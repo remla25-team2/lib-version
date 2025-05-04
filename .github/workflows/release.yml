@@ -28,12 +28,10 @@ jobs:
 
     - name: Write version metadata
       run: |
-        python scripts/write_version.py
-        cat src/lib_version/version.json  # Debug output
-
-    - name: Install the package in development mode
-      run: pip install -e .
-
+          python scripts/write_version.py
+          cat src/lib_version/version.json
+          cat src/lib_version/_version.py
+      
     - name: Build the package
       run: python -m build
 

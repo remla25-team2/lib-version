@@ -26,6 +26,7 @@ class VersionUtil:
                     return json.load(f)["version"]
             
             # Default version if all else fails
+            print("No version found, returning default version.")
             return "0.0.0"
 
     @staticmethod

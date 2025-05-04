@@ -1,13 +1,24 @@
 import json
-import sys
 import os
-
-# Add the src directory to the path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.lib_version.version_util import VersionUtil
+import subprocess
+from lib_version.version_util import VersionUtil
+# Get version
+version = VersionUtil.get_version()
 
 # Make sure the directory exists
 os.makedirs("src/lib_version", exist_ok=True)
+
+# Write version to a static Python file
+with open("src/lib_version/_version.py", "w") as f:
+    f.write(f'__version__ = "{version}"\n')
+
+# Write metadata to version.json
+metadata = {
+    "version": version,
+    "commit": subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).decode().strip(),
+    "branch": subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"]).decode().strip()
+}
+
 with open("src/lib_version/version.json", "w") as f:
-    json.dump(VersionUtil.get_metadata(), f, indent=2)
-    print(f"Writing version info: {VersionUtil.get_version()}")
+    json.dump(metadata, f, indent=2)
+    print(f"Writing version info: {version}")

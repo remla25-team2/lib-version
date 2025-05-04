@@ -1,5 +1,6 @@
 [project]
 name = "lib_version"
+dynamic = ["version"]
 description = "Library for versioning"
 authors = [{ name="Angelos Mangos", email="aemangos@tudelft.nl" }]
 readme = "README.md"
@@ -9,7 +10,6 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
-dynamic = ["version"]
 
 [tool.setuptools.dynamic]
 version = {attr = "lib_version.__version__"}
