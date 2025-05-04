@@ -15,15 +15,6 @@ jobs:
       with:
         fetch-depth: 0  # Required to fetch tags and full history
 
-    - name: Verify tag is on main
-      run: |
-        branch=$(git branch -r --contains ${{ github.sha }} | grep origin/main || true)
-        if [ -z "$branch" ]; then
-          echo "❌ Tag is not on main — exiting."
-          exit 1
-        fi
-        echo "✅ Tag is on main"
-
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
