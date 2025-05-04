@@ -1,5 +1,5 @@
 [project]
-name = "lib-version"
+name = "lib_version"
 version = "0.0.0"
 description = "Library for versioning"
 authors = [{ name="Angelos Mangos", email="aemangos@tudelft.nl" }]
