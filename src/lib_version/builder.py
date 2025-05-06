@@ -121,8 +121,14 @@ class PackageBuilder:
             ]
             
             print(f"Building package with command: {' '.join(cmd)}")
-            subprocess.check_call(cmd)
+            # Execute the build command with stdout and stderr
+            result = subprocess.run(cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             
+            if result.returncode != 0:
+                print(f"Build failed with error: {result.stderr.decode()}")
+                raise Exception("Build failed")
+            # Print the output of the build command
+            print(result.stdout.decode())
             tag_info = " (new tag created)" if created_tag else ""
             print(f"Package built successfully with version {version}{tag_info}")
             return version, self.output_dir
