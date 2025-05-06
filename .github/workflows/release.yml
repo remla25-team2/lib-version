@@ -91,5 +91,5 @@ jobs:
         with:
           files: dist/*
           prerelease: true
-          tag_name: v${{ steps.get_version.outputs.package_version }}
+          tag_name: v${{ steps.get_version.outputs.package_version }}-pre
           name: Pre-release ${{ steps.get_version.outputs.package_version }}
