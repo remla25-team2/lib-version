@@ -48,6 +48,13 @@ def parse_arguments():
         action="store_true",
         help="Get the bumped patch version from the current version"
     )
+
+    parser.add_argument(
+    "--get-next-patch-version",
+        nargs=2,
+        metavar=("MAJOR", "MINOR"),
+        help="Get the next patch version for a given major.minor"
+    )
     
     return parser.parse_args()
 
@@ -69,6 +76,13 @@ def main():
         current_version = VersionUtil.get_version()
         bumped_version = VersionUtil.bump_patch_version(current_version)
         print(bumped_version)
+        return 0
+    
+    # In the main function:
+    if args.get_next_patch_version:
+        major, minor = args.get_next_patch_version
+        next_version = VersionUtil.get_next_patch_version(major, minor)
+        print(next_version)
         return 0
     
     # Create builder

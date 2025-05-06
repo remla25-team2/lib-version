@@ -50,6 +50,52 @@ class VersionUtil:
             return f"{major}.{minor}.{patch}"
         return version
     
+    
+    @staticmethod
+    def get_next_patch_version(major, minor):
+        """
+        Determine the next patch version for a given major.minor by looking at existing tags.
+        Example: For major=1, minor=2, if highest existing tag is v1.2.5, returns "1.2.6"
+        """
+        try:
+            # Get all tags that match the major.minor pattern
+            tags = subprocess.check_output(
+                ["git", "tag", "-l", f"v{major}.{minor}.*"],
+                stderr=subprocess.DEVNULL
+            ).decode("utf-8").strip().split('\n')
+            
+            # Filter valid tags and extract patch numbers
+            patch_versions = []
+            for tag in tags:
+                if tag:  # Skip empty strings
+                    match = re.match(r"^v\d+\.\d+\.(\d+)$", tag)
+                    if match:
+                        patch_versions.append(int(match.group(1)))
+            
+            # Return incremented highest patch or 0 if none found
+            if patch_versions:
+                return f"{major}.{minor}.{max(patch_versions) + 1}"
+            else:
+                return f"{major}.{minor}.0"
+        except:
+            # Fallback if git commands fail
+            return f"{major}.{minor}.0"
+        
+    @staticmethod
+    def get_version_from_ref(ref):
+        """
+        Extract version components from a git ref like refs/tags/v1.2
+        Returns (major, minor, patch) tuple, with patch=None if not specified
+        """
+        import re
+        # Handle refs/tags/vX.Y or refs/tags/vX.Y.Z
+        match = re.match(r"^refs/tags/v(\d+)\.(\d+)(?:\.(\d+))?$", ref)
+        if match:
+            major = int(match.group(1))
+            minor = int(match.group(2))
+            patch = int(match.group(3)) if match.group(3) else None
+            return (major, minor, patch)
+        return None
 
     @staticmethod
     def get_commit_hash():
