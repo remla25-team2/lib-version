@@ -16,18 +16,21 @@ class VersionUtil:
             # Remove 'v' prefix if present
             if git_tag.startswith('v'):
                 git_tag = git_tag[1:]
-            
+        
+            # save version to version.json
+            VersionUtil._save_version(git_tag)
             return git_tag
         except:
             # Fallback to version.json if available
-            version_file = os.path.join(os.path.dirname(__file__), "version.json")
+            version_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "version.json")
             if os.path.exists(version_file):
                 with open(version_file) as f:
                     return json.load(f)["version"]
-            
+                
             # Default version if all else fails
             print("No version found, returning default version.")
             return "0.0.0"
+    
 
     @staticmethod
     def get_commit_hash():
@@ -63,3 +66,17 @@ class VersionUtil:
             "commit": VersionUtil.get_commit_hash(),
             "branch": VersionUtil.get_branch()
         }
+    
+    @staticmethod
+    def _save_version(version):
+        """
+        Save the version to version.json
+        """
+        metadata = {
+            "version": version,
+            "commit": VersionUtil.get_commit_hash(),
+            "branch": VersionUtil.get_branch()
+        }
+        
+        with open("version.json", "w") as f:
+            json.dump(metadata, f, indent=2)
