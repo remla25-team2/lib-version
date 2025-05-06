@@ -3,7 +3,7 @@
 
 ## Features
 - Automate semantic versioning with Git tag integration
-- Support for vX.Y tags with automatic patch versioning
+- Support for `vX.Y` tags with automatic patch versioning
 - Development versions for untagged commits
 - CLI tool for version management operations
 - Seamless integration with GitHub Actions for automated releases
@@ -27,7 +27,7 @@ pip install -e .
 
 ### Library Usage
 
-You can access version information programmatically using the [VersionUtil](http://_vscodecontentref_/0) class:
+You can access version information programmatically using the [`VersionUtil`](src/lib_version/version_util.py) class:
 
 ```python
 from lib_version.version_util import VersionUtil, VersionPart
@@ -53,83 +53,144 @@ print(f"Next version: {next_version}")
 
 ### CLI Usage
 
-The `lib-version` command line tool provides a simple interface to manage your project's versioning:
+The `lib-version` command line tool provides a simple interface to manage your project's versioning. Run `lib-version --help` for all options.
 
-#### Building Packages with Automatic Versioning
+#### Build Packages with Automatic Versioning
 
 ```bash
-# Basic usage - will determine version automatically and build the package
+# Build the package in the current directory, auto-detect version from git
 lib-version
 
-# Specify package directory
+# Specify a package directory
 lib-version --package-dir ./my_package
 
-# Override version
+# Specify output directory for build artifacts
+lib-version --output-dir ./build_output
+
+# Override the version (bypasses git tag detection)
 lib-version --version 1.2.3
+
+# Do not clean the output directory before building
+lib-version --no-clean
 ```
 
 #### Version Information
 
 ```bash
-# Get the current version
+# Get the current version (from git tag or version file)
 lib-version --get-version
 
-# Show version metadata
+# Show version metadata (version, commit, branch, timestamp)
 lib-version --info
 
-# Get the next development version
+# Get the next development version (PEP 440 compliant)
 lib-version --get-dev-version
+
+# Get the next patch version for a given major.minor (e.g., v1.2)
+lib-version --get-next-patch-version 1 2
+
+# Get the next patch version based on the current version
+lib-version --get-next-version
 ```
 
 #### Version Management
 
 ```bash
-# Bump the version and create a tag
+# Bump the version and create a tag (does not push by default)
 lib-version --bump patch
 lib-version --bump minor
 lib-version --bump major
 
-# Create a new tag and push it
+# Create a new tag and optionally push it
+lib-version --create-tag v1.2.3
 lib-version --create-tag v1.2.3 --push
 
-# Get the next patch version for a specific major.minor
-lib-version --get-next-patch-version 1 2
+# Push tags created by bump or create-tag
+lib-version --bump patch --push
 ```
+
+### Using in a Workflow (GitHub Actions Example)
+
+You can use `lib-version` in your CI/CD workflows to automate versioning and package publishing. For example, in a GitHub Actions workflow:
+
+```yaml
+- name: Install dependencies
+  run: |
+    python -m pip install --upgrade pip
+    pip install build lib-version
+
+- name: Build package with automatic versioning
+  run: |
+    lib-version --package-dir . --output-dir dist
+
+- name: Get package version
+  id: get_version
+  run: |
+    VERSION=$(lib-version --get-version)
+    echo "package_version=$VERSION" >> $GITHUB_OUTPUT
+```
+
+See [.github/workflows/release.yml](.github/workflows/release.yml) for a complete example.
+
+### Using as a Dependency in Other Python Projects
+
+Add `lib-version` to your `pyproject.toml` or `requirements.txt`:
+
+**pyproject.toml**
+```toml
+[project.dependencies]
+lib-version = "*"
+```
+
+**requirements.txt**
+```
+lib-version
+```
+
+Then, in your project code, you can use the library API:
+
+```python
+from lib_version.version_util import VersionUtil
+
+__version__ = VersionUtil.get_version()
+```
+
+Or use the CLI in your build scripts or CI/CD pipelines.
 
 ## Workflow Examples
 
 ### Basic Workflow
 
-1. Development starts with a `v1.0` tag
+1. Start development with a `v1.0` tag.
 2. For releases:
-```bash
-# Create a new release with the next minor version
-lib-version --bump minor --push
-# Build the package with the new version
-lib-version
-```
+    ```bash
+    # Bump the minor version and push the new tag
+    lib-version --bump minor --push
+    # Build the package with the new version
+    lib-version
+    ```
 3. For pre-releases from main:
-```bash
-# Just build - it will create a development version
-lib-version
-```
+    ```bash
+    # Build with a development version
+    lib-version
+    ```
 
 ### Version Tag Format
 
-The library supports two tag formats:
-
-1. `vX.Y` (e.g., `v1.0`): When building with this tag, it will automatically find the next patch version
-2. `vX.Y.Z` (e.g., `v1.0.0`): Explicit version, used as-is
+- `vX.Y` (e.g., `v1.0`): When building with this tag, it will automatically find the next patch version.
+- `vX.Y.Z` (e.g., `v1.0.0`): Explicit version, used as-is.
 
 ### GitHub Actions Integration
 
 The included workflow automatically:
 
-1. For tagged commits (`v*.*` or `v*.*.*`): Builds and publishes a release
-2. For commits to [main](http://_vscodecontentref_/1): Builds with a development version and creates a pre-release
-3. For pull requests: Runs tests only
+1. For tagged commits (`v*.*` or `v*.*.*`): Builds and publishes a release.
+2. For commits to [`main`](https://github.com/yourusername/lib-version/tree/main): Builds with a development version and creates a pre-release.
+3. For pull requests: Runs tests only.
 
 ## How It Works
 
-- When you build with a `vX.Y` tag (like `v1.2`), it looks for existing `v1.2.*` tags, finds the highest patch number, and creates the next one (e.g., `v1.2.3`)
-- When building untagged commits, it generates a PEP 440 compliant development version like `1.2.3.dev12+main.a1b2c3d`
+- When you build with a `vX.Y` tag (like `v1.2`), it looks for existing `v1.2.*` tags, finds the highest patch number, and creates the next one (e.g., `v1.2.3`).
+- When building untagged commits, it generates a PEP 440 compliant development version like `1.2.3.dev12+main.a1b2c3d`.
+
+For more details, see the [source code](src/lib_version/) and [examples above](#usage).
