@@ -83,9 +83,8 @@ class VersionUtil:
         except:
             pass
             
+        version_file = "version.json"
         # Fallback to version.json if available
-        from pathlib import Path
-        version_file = Path.cwd() / "version.json"
         print(f"Looking for version file at: {version_file}")
         if os.path.exists(version_file):
             with open(version_file) as f:
