@@ -42,6 +42,12 @@ def parse_arguments():
         action="store_true",
         help="Show version info without building"
     )
+
+    parser.add_argument(
+        "--get-bumped-version",
+        action="store_true",
+        help="Get the bumped patch version from the current version"
+    )
     
     return parser.parse_args()
 
@@ -57,6 +63,12 @@ def main():
         print(f"Package version: {metadata['version']}")
         print(f"Git commit: {metadata['commit']}")
         print(f"Git branch: {metadata['branch']}")
+        return 0
+    
+    if args.get_bumped_version:
+        current_version = VersionUtil.get_version()
+        bumped_version = VersionUtil.bump_patch_version(current_version)
+        print(bumped_version)
         return 0
     
     # Create builder

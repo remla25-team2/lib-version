@@ -72,12 +72,28 @@ jobs:
           echo "Package version: $VERSION"
 
       # For tagged releases (official releases)
-      - name: Upload to GitHub Release
+      - name: Get bumped version
+        id: get_bumped_version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          # Use our utility to get the bumped version
+          BUMPED_VERSION=$(lib-version --get-bumped-version)
+          echo "bumped_version=$BUMPED_VERSION" >> $GITHUB_OUTPUT
+          echo "Bumped version: $BUMPED_VERSION"
+
+      - name: Create new tag for bumped version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          git tag v${{ steps.get_bumped_version.outputs.bumped_version }}
+          git push origin v${{ steps.get_bumped_version.outputs.bumped_version }}
+
+      - name: Upload to GitHub Release with bumped version
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: dist/*
-          name: Release ${{ steps.get_version.outputs.package_version }}
+          tag_name: v${{ steps.get_bumped_version.outputs.bumped_version }}
+          name: Release ${{ steps.get_bumped_version.outputs.bumped_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

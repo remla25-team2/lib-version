@@ -30,6 +30,25 @@ class VersionUtil:
             # Default version if all else fails
             print("No version found, returning default version.")
             return "0.0.0"
+        
+    @staticmethod
+    def bump_patch_version(version):
+        """
+        Bump the patch version of a semantic version string.
+        Example: '1.2.3' -> '1.2.4'
+        """
+        import re
+        pattern = r"^v?(\d+)\.(\d+)\.(\d+)(?:\.(.+)|-(.*)|$)"
+        match = re.match(pattern, version)
+        if match:
+            major = int(match.group(1))
+            minor = int(match.group(2))
+            patch = int(match.group(3))
+            # Bump patch
+            patch += 1
+            # Return new version without v prefix
+            return f"{major}.{minor}.{patch}"
+        return version
     
 
     @staticmethod

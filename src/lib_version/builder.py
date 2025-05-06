@@ -59,7 +59,8 @@ class PackageBuilder:
                 is_tagged = False
                 
             if is_tagged:
-                return base_version
+                # For tagged commits, bump the patch version
+                return VersionUtil.bump_patch_version(base_version)
             else:
                 # For non-tagged commits, use dev versioning format
                 return VersionUtil.get_dev_version(base_version)
