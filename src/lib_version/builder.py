@@ -63,8 +63,8 @@ class PackageBuilder:
         """
         Write version information to files
         """
-        # Create src directory if it doesn't exist
-        package_name = os.path.basename(self.package_dir.rstrip("/"))
+        # Always use the correct package name with underscores, not hyphens
+        package_name = "lib_version"
         src_dir = os.path.join(self.package_dir, "src", package_name)
         os.makedirs(src_dir, exist_ok=True)
         
