@@ -63,10 +63,9 @@ class PackageBuilder:
         """
         Write version information to files
         """
-        # Always use the correct package name with underscores, not hyphens
-        package_name = "lib_version"
-        src_dir = os.path.join(self.package_dir, "src", package_name)
-        os.makedirs(src_dir, exist_ok=True)
+        src_dir = os.path.join(self.package_dir, "src")
+        if not os.path.exists(src_dir):
+            raise FileNotFoundError(f"Source directory {src_dir} does not exist.")
         
         # Write version to _version.py
         with open(os.path.join(src_dir, "_version.py"), "w") as f:
