@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from .version_util import VersionUtil
+from .version_util import VersionUtil, VersionPart
 import re
 
 class PackageBuilder:
@@ -22,53 +22,42 @@ class PackageBuilder:
         self.output_dir = output_dir or os.path.join(self.package_dir, "dist")
         self.version_override = version_override
         
-    def _parse_version(self, version_str):
-        """Parse semantic version string into components."""
-        pattern = r"^v?(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z0-9.-]+))?$"
-        match = re.match(pattern, version_str)
-        if match:
-            major, minor, patch = map(int, match.groups()[:3])
-            prerelease = match.group(4)
-            return (major, minor, patch, prerelease)
-        return None
+    def determine_version(self):
+        """
+        Determine the version for the build based on various conditions.
         
-    def _format_version(self, major, minor, patch, prerelease=None):
-        """Format version components into a version string."""
-        version = f"{major}.{minor}.{patch}"
-        if prerelease:
-            version += f"-{prerelease}"
-        return version
-
-    def get_auto_version(self):
+        For vX.Y tags: Auto-determine next patch version
+        For vX.Y.Z tags: Use as-is
+        For untagged commits: Use dev versioning
+        
+        Returns:
+            tuple: (version_string, is_new_tag)
         """
-        Get version with auto-bump for development builds
-        """
-        try:
-            # Try to get version from git tag
-            base_version = VersionUtil.get_version()
+        # Override takes precedence
+        if self.version_override:
+            return self.version_override, False
+        
+        # Check if we're on a tagged commit
+        if VersionUtil.is_on_tagged_commit():
+            tag = VersionUtil.get_latest_tag()
             
-            # Check if we're on a tagged commit
-            is_tagged = False
-            try:
-                exact_tag = subprocess.check_output(
-                    ["git", "describe", "--exact-match", "--tags"],
-                    stderr=subprocess.DEVNULL
-                ).decode("utf-8").strip()
-                is_tagged = True
-            except:
-                is_tagged = False
+            # Check if it's a vX.Y format (major.minor only)
+            parsed = VersionUtil.parse_version(tag)
+            if parsed and parsed[2] is None:  # No patch specified
+                # Get the next version for this major.minor
+                version = VersionUtil.get_next_version_for_tag(tag)
                 
-            if is_tagged:
-                # For tagged commits, bump the patch version
-                return VersionUtil.bump_patch_version(base_version)
+                # Create and push the new version tag
+                VersionUtil.create_tag(version, push=True)
+                return version, True
             else:
-                # For non-tagged commits, use dev versioning format
-                return VersionUtil.get_dev_version(base_version)
-            
-        except Exception as e:
-            print(f"Error determining version: {e}")
-            return "0.0.1.dev0"
-
+                # It's a full version tag, use it directly (strip v prefix)
+                version = tag[1:] if tag.startswith('v') else tag
+                return version, False
+        else:
+            # For untagged commits, use dev versioning
+            return VersionUtil.get_dev_version(), False
+        
     def write_version_files(self, version):
         """
         Write version information to files
@@ -83,12 +72,8 @@ class PackageBuilder:
             f.write(f'__version__ = "{version}"\n')
         
         # Write metadata to version.json
-        metadata = {
-            "version": version,
-            "commit": VersionUtil.get_commit_hash(),
-            "branch": VersionUtil.get_branch(),
-            "timestamp": subprocess.check_output(["date", "+%Y-%m-%d %H:%M:%S"]).decode().strip()
-        }
+        metadata = VersionUtil.get_metadata()
+        metadata["version"] = version
         
         with open(os.path.join(src_dir, "version.json"), "w") as f:
             json.dump(metadata, f, indent=2)
@@ -96,23 +81,18 @@ class PackageBuilder:
         print(f"Version files written with version: {version}")
         return version
         
-    def build(self, auto_bump=True, clean=True):
+    def build(self, create_tag=True, clean=True):
         """
         Build package with automatic version handling
         
         Args:
-            auto_bump: If True, automatically bump version for non-tagged commits
+            create_tag: If True, create a new tag for vX.Y format tags
             clean: If True, clean the output directory before building
         """
         try:
-            # Determine version
-            if self.version_override:
-                version = self.version_override
-            elif auto_bump:
-                version = self.get_auto_version()
-            else:
-                version = VersionUtil.get_version()
-                
+            # Determine version and whether a new tag was created
+            version, created_tag = self.determine_version()
+            
             # Write version files
             self.write_version_files(version)
             
@@ -138,7 +118,8 @@ class PackageBuilder:
             print(f"Building package with command: {' '.join(cmd)}")
             subprocess.check_call(cmd)
             
-            print(f"Package built successfully with version {version}")
+            tag_info = " (new tag created)" if created_tag else ""
+            print(f"Package built successfully with version {version}{tag_info}")
             return version, self.output_dir
         
         except Exception as e:

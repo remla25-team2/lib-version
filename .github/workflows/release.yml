@@ -3,12 +3,13 @@ name: Build and Publish Python Package
 on:
   push:
     tags:
-      - 'v*.*.*'  # Run for semantic version tags
+      - 'v*.*'       # Run for vX.Y or vX.Y.Z tags
+      - 'v*.*.*'     # Run for semantic version tags
     branches:
-      - main      # Run for main branch (will create pre-releases)
+      - main         # Run for main branch (will create pre-releases)
   pull_request:
     branches:
-      - main      # Run tests on PRs to main
+      - main         # Run tests on PRs to main
 
 jobs:
   test:
@@ -59,7 +60,8 @@ jobs:
 
       - name: Build package
         run: |
-          # Use our lib-version CLI to build the package with auto-versioning
+          # For tagged builds (vX.Y or vX.Y.Z), the builder will handle version creation
+          # For main branch builds, it will create a dev version
           lib-version --package-dir .
           # List the built packages
           ls -la dist/
@@ -67,66 +69,20 @@ jobs:
       - name: Get package version
         id: get_version
         run: |
-          VERSION=$(lib-version --info | grep "Package version" | cut -d' ' -f3)
+          VERSION=$(lib-version --get-version)
           echo "package_version=$VERSION" >> $GITHUB_OUTPUT
           echo "Package version: $VERSION"
 
-      # For tagged releases (either v1.2 or v1.2.3 format)
-      - name: Parse version and determine patch
-        id: parse_version
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          # Check if we need to auto-determine the patch version
-          if [[ "${{ github.ref }}" =~ ^refs/tags/v[0-9]+\.[0-9]+$ ]]; then
-            # Extract major.minor and determine patch
-            MAJOR_MINOR=$(echo ${{ github.ref }} | sed -r 's|refs/tags/v([0-9]+\.[0-9]+)|\1|')
-            MAJOR=$(echo $MAJOR_MINOR | cut -d. -f1)
-            MINOR=$(echo $MAJOR_MINOR | cut -d. -f2)
-            
-            # Use new function to determine next patch version
-            FULL_VERSION=$(lib-version --get-next-patch-version $MAJOR $MINOR)
-            echo "Using auto-patched version: $FULL_VERSION"
-          else
-            # Regular semver tag, strip the 'v' prefix
-            FULL_VERSION=$(echo ${{ github.ref }} | sed 's|refs/tags/v||')
-            echo "Using explicit version: $FULL_VERSION"
-          fi
-          
-          echo "full_version=$FULL_VERSION" >> $GITHUB_OUTPUT
-
-      - name: Build package with determined version
-        run: |
-          # Use our lib-version CLI to build the package with specific version
-          lib-version --package-dir . --version ${{ steps.parse_version.outputs.full_version }}
-          # List the built packages
-          ls -la dist/
-
-      - name: Get bumped version
-        id: get_bumped_version
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          # Use our utility to get the bumped version
-          BUMPED_VERSION=$(lib-version --bump-version ${{ steps.parse_version.outputs.full_version }})
-          echo "bumped_version=$BUMPED_VERSION" >> $GITHUB_OUTPUT
-          echo "Bumped version: $BUMPED_VERSION"
-
+      # For tagged releases
       - name: Upload to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: dist/*
-          tag_name: v${{ steps.parse_version.outputs.full_version }}
-          name: Release ${{ steps.parse_version.outputs.full_version }}
+          tag_name: v${{ steps.get_version.outputs.package_version }}
+          name: Release ${{ steps.get_version.outputs.package_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create new tag for bumped version
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git tag v${{ steps.get_bumped_version.outputs.bumped_version }}
-          git push origin v${{ steps.get_bumped_version.outputs.bumped_version }}
 
       # For non-tagged pushes to main (pre-releases)
       - name: Create Pre-release
