@@ -3,46 +3,93 @@ name: Build and Publish Python Package
 on:
   push:
     tags:
-      - 'v*.*.*'  # Run only for semantic version tags
+      - 'v*.*'       # Run for vX.Y or vX.Y.Z tags
+      # - 'v*.*.*'     # Run for semantic version tags
+    branches:
+      - main         # Run for main branch (will create pre-releases)
+  pull_request:
+    branches:
+      - main         # Run tests on PRs to main
 
 jobs:
-  build-publish:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Required to get all tags for versioning
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest build
+          pip install -e .
+
+      - name: Run tests
+        run: pytest
+
+  build:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # This is needed to create releases
+      contents: write  # Needed for release creation
+      id-token: write  # Needed for PyPI publishing
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0  # Required to fetch tags and full history
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Required to get all tags for versioning
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-    - name: Install build tools
-      run: |
-        python -m pip install --upgrade pip build
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+          pip install -e .
 
-    - name: Install package in development mode
-      run: pip install -e .
+      - name: Build package
+        run: |
+          # For tagged builds (vX.Y or vX.Y.Z), the builder will handle version creation
+          # For main branch builds, it will create a dev version
+          lib-version --package-dir .
+          # List the built packages
+          ls -la dist/
 
-    - name: Write version metadata
-      run: |
-          python scripts/write_version.py
-          cat src/lib_version/version.json
-          cat src/lib_version/_version.py
-      
-    - name: Build the package
-      run: python -m build
+      - name: Get package version
+        id: get_version
+        run: |
+          VERSION=$(lib-version --get-version)
+          echo "package_version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Package version: $VERSION"
 
-    - name: Upload to GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        files: |
-          dist/*.whl
-          dist/*.tar.gz
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # For tagged releases
+      - name: Upload to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          tag_name: v${{ steps.get_version.outputs.package_version }}
+          name: Release ${{ steps.get_version.outputs.package_version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # For non-tagged pushes to main (pre-releases)
+      - name: Create Pre-release
+        if: github.ref == 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
+          prerelease: true
+          tag_name: v${{ steps.get_version.outputs.package_version }}
+          name: Pre-release ${{ steps.get_version.outputs.package_version }}
