@@ -82,17 +82,14 @@ class VersionUtil:
                 return version
         except:
             pass
-            
-        version_file = "version.json"
-        # Fallback to version.json if available
-        print(f"Looking for version file at: {version_file}")
-        if os.path.exists(version_file):
-            with open(version_file) as f:
-                return json.load(f)["version"]
                 
-        # Default version if all else fails
-        print("No version found, returning default version.")
-        return "0.0.1-dev0"
+        try:
+            from ._version import __version__
+            return __version__
+        except ImportError:
+            # Default version if all else fails
+            print("No version found, returning default version.")
+            return "0.0.1-dev0"
     
     @staticmethod
     def bump_version(version, part=VersionPart.PATCH):

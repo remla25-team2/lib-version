@@ -63,17 +63,22 @@ class PackageBuilder:
         """
         Write version information to files
         """
-        # Write metadata to version.json
+        # Write metadata to version.json for reference
         metadata = VersionUtil.get_metadata()
         metadata["version"] = version
         
         with open(os.path.join(self.package_dir, "version.json"), "w") as f:
             json.dump(metadata, f, indent=2)
-
-        # print where the version files are written
-        print(f"Version files written to: {os.path.join(self.package_dir, 'version.json')}")
             
+        # Update the _version.py file to ensure it's included in the package
+        version_file_path = os.path.join(self.package_dir, "src", "lib_version", "_version.py")
+        with open(version_file_path, "w") as f:
+            f.write(f'# This file is updated automatically by lib-version\n')
+            f.write(f'__version__ = "{version}"\n')
+                
         print(f"Version files written with version: {version}")
+        print(f"Version files written to: {os.path.join(self.package_dir, 'version.json')}")
+        print(f"Version module updated: {version_file_path}")
         return version
         
     def build(self, create_tag=True, clean=True):

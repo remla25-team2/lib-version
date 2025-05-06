@@ -14,12 +14,6 @@ classifiers = [
 [tool.setuptools.dynamic]
 version = {attr = "lib_version.__version__"}
 
-[tools.setuptools]
-include-package-data = true
-
-[tool.setuptools.package-data]
-lib_version = ["*.json"]
-
 [build-system]
 requires = ["setuptools >= 77.0.3", "wheel"]
 build-backend = "setuptools.build_meta"
