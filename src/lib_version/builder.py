@@ -44,55 +44,32 @@ class PackageBuilder:
         Get version with automatic patch bumping or pre-release suffix
         """
         try:
-            # Check if we're on a tag
-            is_on_tag = False
-            try:
-                git_describe = subprocess.check_output(
-                    ["git", "describe", "--exact-match", "--tags"],
-                    stderr=subprocess.DEVNULL,
-                    cwd=self.package_dir
-                ).decode().strip()
-                is_on_tag = True
-            except subprocess.CalledProcessError:
-                pass
-            
-            # Get the most recent tag
-            git_tag = subprocess.check_output(
-                ["git", "describe", "--tags", "--abbrev=0"],
-                stderr=subprocess.DEVNULL,
-                cwd=self.package_dir
-            ).decode().strip()
-            
-            # Parse the version
-            version_parts = self._parse_version(git_tag)
+            # Get the current version from VersionUtil
+            current_version = VersionUtil.get_version()
+            version_parts = self._parse_version(current_version)
             if not version_parts:
-                raise ValueError(f"Invalid version format: {git_tag}")
+                raise ValueError(f"Invalid version format: {current_version}")
             
-            major, minor, patch, _ = version_parts
+            major, minor, patch, prerelease = version_parts
+            
+            # Check if we're on a tag
+            is_on_tag = VersionUtil.is_on_tag()
             
             # If we're not on a tag, modify the version
             if not is_on_tag:
                 branch = VersionUtil.get_branch()
                 
-                if branch == "main" or branch == "master":
+                if branch in ["main", "master"]:
                     # On main branch, create a pre-release version
-                    commits = subprocess.check_output(
-                        ["git", "rev-list", f"{git_tag}..HEAD", "--count"],
-                        cwd=self.package_dir
-                    ).decode().strip()
-                    
+                    commits = VersionUtil.get_commit_count_since_tag()
                     prerelease = f"pre{commits}"
                     return self._format_version(major, minor, patch, prerelease)
                 else:
                     # On other branches, bump patch version
                     return self._format_version(major, minor, patch + 1)
             
-            # Remove 'v' prefix if present for the final version
-            version = git_tag
-            if version.startswith('v'):
-                version = version[1:]
-            
-            return version
+            # Return the current version if on a tag
+            return current_version
             
         except Exception as e:
             print(f"Error getting auto version: {e}")
