@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - 'v*.*'       # Run for vX.Y or vX.Y.Z tags
-      - 'v*.*.*'     # Run for semantic version tags
+      # - 'v*.*.*'     # Run for semantic version tags
     branches:
       - main         # Run for main branch (will create pre-releases)
   pull_request:

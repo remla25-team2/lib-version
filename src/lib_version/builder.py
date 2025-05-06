@@ -43,6 +43,7 @@ class PackageBuilder:
             
             # Check if it's a vX.Y format (major.minor only)
             parsed = VersionUtil.parse_version(tag)
+            print(f"Parsed version from tag: {parsed}")
             if parsed and parsed[2] is None:  # No patch specified
                 # Get the next version for this major.minor
                 version = VersionUtil.get_next_version_for_tag(tag)
