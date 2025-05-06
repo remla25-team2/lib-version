@@ -63,24 +63,15 @@ class PackageBuilder:
         """
         Write version information to files
         """
-        src_dir = os.path.join(self.package_dir, "src")
-        if not os.path.exists(src_dir):
-            raise FileNotFoundError(f"Source directory {src_dir} does not exist.")
-        
-        # Write version to _version.py
-        with open(os.path.join(src_dir, "_version.py"), "w") as f:
-            f.write(f'__version__ = "{version}"\n')
-        
         # Write metadata to version.json
         metadata = VersionUtil.get_metadata()
         metadata["version"] = version
         
-        with open(os.path.join(src_dir, "version.json"), "w") as f:
+        with open(os.path.join(self.package_dir, "version.json"), "w") as f:
             json.dump(metadata, f, indent=2)
 
         # print where the version files are written
-        print(f"Version files written to: {os.path.join(src_dir, '_version.py')}")
-        print(f"Version files written to: {os.path.join(src_dir, 'version.json')}")
+        print(f"Version files written to: {os.path.join(self.package_dir, 'version.json')}")
             
         print(f"Version files written with version: {version}")
         return version
