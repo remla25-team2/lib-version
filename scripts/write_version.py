@@ -8,10 +8,6 @@ version = VersionUtil.get_version()
 # Make sure the directory exists
 os.makedirs("src/lib_version", exist_ok=True)
 
-# Write version to a static Python file
-with open("src/lib_version/_version.py", "w") as f:
-    f.write(f'__version__ = "{version}"\n')
-
 # Write metadata to version.json
 metadata = {
     "version": version,
