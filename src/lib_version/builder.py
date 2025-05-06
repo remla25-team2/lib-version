@@ -78,6 +78,10 @@ class PackageBuilder:
         
         with open(os.path.join(src_dir, "version.json"), "w") as f:
             json.dump(metadata, f, indent=2)
+
+        # print where the version files are written
+        print(f"Version files written to: {os.path.join(src_dir, '_version.py')}")
+        print(f"Version files written to: {os.path.join(src_dir, 'version.json')}")
             
         print(f"Version files written with version: {version}")
         return version
