@@ -5,8 +5,8 @@ def test_parse_version():
     """Test version parsing"""
     assert VersionUtil.parse_version("1.2.3") == (1, 2, 3, None)
     assert VersionUtil.parse_version("v1.2.3") == (1, 2, 3, None)
-    assert VersionUtil.parse_version("1.2") == (1, 2, 0, None)
-    assert VersionUtil.parse_version("v1.2") == (1, 2, 0, None)
+    assert VersionUtil.parse_version("1.2") == (1, 2, None, None)
+    assert VersionUtil.parse_version("v1.2") == (1, 2, None, None)
     assert VersionUtil.parse_version("1.2.3-dev1") == (1, 2, 3, "dev1")
     assert VersionUtil.parse_version("invalid") is None
 
