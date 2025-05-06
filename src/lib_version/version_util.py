@@ -22,8 +22,8 @@ class VersionUtil:
         if match:
             major = int(match.group(1))
             minor = int(match.group(2))
-            patch = int(match.group(3)) if match.group(3) else 0
-            prerelease = match.group(4)
+            patch = int(match.group(3)) if match.group(3) else None
+            prerelease = match.group(4) if match.group(4) else None
             return (major, minor, patch, prerelease)
         return None
     
