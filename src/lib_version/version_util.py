@@ -107,6 +107,8 @@ class VersionUtil:
         elif part == VersionPart.MINOR:
             return VersionUtil.format_version(major, minor + 1, 0)
         else:  # PATCH
+            if patch is None:
+                patch = 0
             return VersionUtil.format_version(major, minor, patch + 1)
     
     @staticmethod
