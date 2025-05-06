@@ -80,3 +80,30 @@ class VersionUtil:
         
         with open("version.json", "w") as f:
             json.dump(metadata, f, indent=2)
+
+
+    @staticmethod
+    def get_dev_version(base_version="0.0.1"):
+        """
+        Generate a PEP 440 compliant development version.
+        For non-tagged commits, we use: {base}.dev{commit_count}+{commit_hash}
+        """
+        try:
+            # Get number of commits since last tag
+            commit_count = subprocess.check_output(
+                ["git", "rev-list", "--count", "HEAD"],
+                stderr=subprocess.DEVNULL
+            ).decode("utf-8").strip()
+            
+            # Get commit hash
+            commit_hash = VersionUtil.get_commit_hash()
+            
+            # Format according to PEP 440
+            dev_version = f"{base_version}.dev{commit_count}+{commit_hash}"
+            
+            # Save version
+            VersionUtil._save_version(dev_version)
+            return dev_version
+        except:
+            # Fallback if git commands fail
+            return f"{base_version}.dev0"

@@ -41,39 +41,32 @@ class PackageBuilder:
 
     def get_auto_version(self):
         """
-        Get version with automatic patch bumping or pre-release suffix
+        Get version with auto-bump for development builds
         """
         try:
-            # Get the current version from VersionUtil
-            current_version = VersionUtil.get_version()
-            version_parts = self._parse_version(current_version)
-            if not version_parts:
-                raise ValueError(f"Invalid version format: {current_version}")
+            # Try to get version from git tag
+            base_version = VersionUtil.get_version()
             
-            major, minor, patch, prerelease = version_parts
-            
-            # Check if we're on a tag
-            is_on_tag = VersionUtil.is_on_tag()
-            
-            # If we're not on a tag, modify the version
-            if not is_on_tag:
-                branch = VersionUtil.get_branch()
+            # Check if we're on a tagged commit
+            is_tagged = False
+            try:
+                exact_tag = subprocess.check_output(
+                    ["git", "describe", "--exact-match", "--tags"],
+                    stderr=subprocess.DEVNULL
+                ).decode("utf-8").strip()
+                is_tagged = True
+            except:
+                is_tagged = False
                 
-                if branch in ["main", "master"]:
-                    # On main branch, create a pre-release version
-                    commits = VersionUtil.get_commit_count_since_tag()
-                    prerelease = f"pre{commits}"
-                    return self._format_version(major, minor, patch, prerelease)
-                else:
-                    # On other branches, bump patch version
-                    return self._format_version(major, minor, patch + 1)
-            
-            # Return the current version if on a tag
-            return current_version
+            if is_tagged:
+                return base_version
+            else:
+                # For non-tagged commits, use dev versioning format
+                return VersionUtil.get_dev_version(base_version)
             
         except Exception as e:
-            print(f"Error getting auto version: {e}")
-            return VersionUtil.get_version()
+            print(f"Error determining version: {e}")
+            return "0.0.1.dev0"
 
     def write_version_files(self, version):
         """
