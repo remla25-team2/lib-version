@@ -52,7 +52,11 @@ class VersionUtil:
                 cmd.extend(["-l", pattern])
                 
             tags = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode("utf-8").strip().split('\n')
-            return tags[0] if tags and tags[0] else None
+            for tag in tags:
+                if "-pre" in tag:
+                    return tag.replace("-pre", "")
+                return tag
+            return None
         except:
             return None
     
