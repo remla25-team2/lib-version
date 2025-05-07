@@ -47,18 +47,70 @@ class VersionUtil:
     def get_latest_tag(pattern=None):
         """Get the latest tag from git, optionally matching a pattern."""
         try:
-            cmd = ["git", "tag", "--sort=-v:refname"]
+            cmd = ["git", "tag"]
             if pattern:
                 cmd.extend(["-l", pattern])
                 
             tags = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode("utf-8").strip().split('\n')
+            tags = [t for t in tags if t]
+            
+            if not tags:
+                return None
+            
+            # Parse all tags and filter out invalid ones
+            parsed_tags = []
             for tag in tags:
-                if "-pre" in tag:
-                    return tag.replace("-pre", "")
-                return tag
+                parsed = VersionUtil.parse_version(tag)
+                if parsed:
+                    # Store tuple of (tag, parsed_version)
+                    parsed_tags.append((tag, parsed))
+            
+            if not parsed_tags:
+                return None
+                
+            # First find highest non-pre-release version
+            non_pre_tags = [(tag, parsed) for tag, parsed in parsed_tags if parsed[3] is None]
+            if non_pre_tags:
+                sorted_tags = sorted(non_pre_tags, key=lambda x: (
+                    x[1][0],                         
+                    x[1][1],                   
+                    0 if x[1][2] is None else x[1][2]
+                ), reverse=True)
+                return sorted_tags[0][0]
+            
+            # If only pre-release versions exist, use the highest one but strip -pre
+            sorted_tags = sorted(parsed_tags, key=lambda x: (
+                x[1][0], 
+                x[1][1], 
+                0 if x[1][2] is None else x[1][2]
+            ), reverse=True)
+            
+            if sorted_tags:
+                tag = sorted_tags[0][0]
+                return tag.replace("-pre", "")
+                
             return None
-        except:
+        except Exception as e:
+            print(f"Error getting latest tag: {e}")
             return None
+        
+    @staticmethod
+    def delete_tag(tag, push=False):
+        """Delete a git tag and optionally push the deletion."""
+        try:
+            # Delete local tag
+            subprocess.check_call(["git", "tag", "-d", tag])
+            print(f"Deleted local tag: {tag}")
+            
+            # Push deletion if requested
+            if push:
+                subprocess.check_call(["git", "push", "origin", f":refs/tags/{tag}"])
+                print(f"Pushed tag deletion: {tag}")
+                
+            return True
+        except Exception as e:
+            print(f"Error deleting tag: {e}")
+            return False
     
     @staticmethod
     def get_all_tags(pattern=None):
