@@ -71,18 +71,20 @@ class VersionUtil:
             # First find highest non-pre-release version
             non_pre_tags = [(tag, parsed) for tag, parsed in parsed_tags if parsed[3] is None]
             if non_pre_tags:
+                # Sort by major, minor, patch (where patch might be None)
+                # Ensure explicit patch versions (0.1.0) are considered higher than implicit (0.1)
                 sorted_tags = sorted(non_pre_tags, key=lambda x: (
-                    x[1][0],                         
-                    x[1][1],                   
-                    0 if x[1][2] is None else x[1][2]
+                    x[1][0],                         # major
+                    x[1][1],                         # minor
+                    -1 if x[1][2] is None else x[1][2]  # patch (None treated as lower than 0)
                 ), reverse=True)
                 return sorted_tags[0][0]
             
             # If only pre-release versions exist, use the highest one but strip -pre
             sorted_tags = sorted(parsed_tags, key=lambda x: (
-                x[1][0], 
-                x[1][1], 
-                0 if x[1][2] is None else x[1][2]
+                x[1][0],                         # major
+                x[1][1],                         # minor
+                -1 if x[1][2] is None else x[1][2]  # patch (None treated as lower than 0)
             ), reverse=True)
             
             if sorted_tags:
