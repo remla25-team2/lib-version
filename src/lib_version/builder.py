@@ -44,7 +44,7 @@ class PackageBuilder:
             # Check if it's a vX.Y format (major.minor only)
             parsed = VersionUtil.parse_version(tag)
             print(f"Parsed version from tag: {parsed}")
-            if parsed and parsed[2] is None:  # No patch specified
+            if parsed:  # No patch specified
                 # Get the next version for this major.minor
                 version = VersionUtil.get_next_version_for_tag(tag)
                 
@@ -138,6 +138,13 @@ class PackageBuilder:
             if is_major_minor_tag and created_tag:
                 print(f"Deleting major.minor tag {original_tag} after creating {version}")
                 VersionUtil.delete_tag(original_tag, push=True)
+
+            # delete all major.minor tags
+            major_minor_tags = VersionUtil.get_major_minor_tags()
+            for tag in major_minor_tags:
+                if tag != original_tag:
+                    print(f"Deleting major.minor tag {tag}")
+                    VersionUtil.delete_tag(tag, push=True)
                 
             tag_info = " (new tag created)" if created_tag else ""
             print(f"Package built successfully with version {version}{tag_info}")

@@ -174,21 +174,13 @@ class VersionUtil:
         if not parsed:
             return None
             
-        major, minor, _, _ = parsed
+        major, minor, patch, _ = parsed
         
-        # Find all tags that match this major.minor
-        pattern = f"v{major}.{minor}.*"
-        matching_tags = VersionUtil.get_all_tags(pattern)
-        
-        # Extract patch numbers
-        patch_versions = []
-        for t in matching_tags:
-            p = VersionUtil.parse_version(t)
-            if p:
-                patch_versions.append(p[2])
-        
-        # Return the next patch version
-        next_patch = max(patch_versions) + 1 if patch_versions else 0
+        # Increment patch version
+        if patch is None:
+            patch = 0
+        next_patch = patch + 1
+        # Format the next version
         return VersionUtil.format_version(major, minor, next_patch)
     
     @staticmethod
@@ -297,3 +289,16 @@ class VersionUtil:
         
         with open("version.json", "w") as f:
             json.dump(metadata, f, indent=2)
+
+    @staticmethod
+    def get_major_minor_tags():
+        """Get all major.minor tags."""
+        tags = VersionUtil.get_all_tags()
+        major_minor_tags = []
+        
+        for tag in tags:
+            parsed = VersionUtil.parse_version(tag)
+            if parsed and parsed[2] is None:
+                # Only include major.minor tags
+                major_minor_tags.append(tag)
+        return major_minor_tags
