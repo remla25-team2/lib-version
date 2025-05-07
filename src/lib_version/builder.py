@@ -40,7 +40,7 @@ class PackageBuilder:
         # Check if we're on a tagged commit
         if VersionUtil.is_on_tagged_commit():
             tag = VersionUtil.get_latest_tag()
-            
+            print(f"Latest tag found: {tag}")
             # Check if it's a vX.Y format (major.minor only)
             parsed = VersionUtil.parse_version(tag)
             print(f"Parsed version from tag: {parsed}")
