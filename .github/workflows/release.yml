@@ -107,6 +107,7 @@ jobs:
 
       # Create pre-release for all builds
       - name: Create Pre-release
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v1
         with:
           files: dist/*
