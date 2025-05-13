@@ -22,7 +22,7 @@ class PackageBuilder:
         self.output_dir = output_dir or os.path.join(self.package_dir, "dist")
         self.version_override = version_override
         
-    def determine_version(self):
+    def determine_version(self, use_dev_version=False):
         """
         Determine the version for the build based on various conditions.
         
@@ -37,8 +37,9 @@ class PackageBuilder:
         if self.version_override:
             return self.version_override, False
         
+
         # Check if we're on a tagged commit
-        if VersionUtil.is_on_tagged_commit():
+        if VersionUtil.is_on_tagged_commit() and not use_dev_version:
             tag = VersionUtil.get_latest_tag()
             print(f"Latest tag found: {tag}")
             # Check if it's a vX.Y format (major.minor only)
@@ -81,7 +82,7 @@ class PackageBuilder:
         print(f"Version module updated: {version_file_path}")
         return version
         
-    def build(self, create_tag=True, clean=True):
+    def build(self, create_tag=True, clean=True, use_dev_version=False):
         """
         Build package with automatic version handling
         
@@ -94,7 +95,7 @@ class PackageBuilder:
             original_tag = VersionUtil.get_latest_tag()
             
             # Determine version and whether a new tag was created
-            version, created_tag = self.determine_version()
+            version, created_tag = self.determine_version(use_dev_version=use_dev_version)
             
             # Write version files
             self.write_version_files(version)
