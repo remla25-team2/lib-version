@@ -1,4 +1,5 @@
 # lib-version
+
 `lib-version` is a Python library and utility for managing and retrieving version information from Git repositories. It's designed to simplify versioning for Python projects by leveraging Git tags and providing automatic version management.
 
 ## Features
@@ -59,54 +60,54 @@ The `lib-version` command line tool provides a simple interface to manage your p
 
 ```bash
 # Build the package in the current directory, auto-detect version from git
-lib-version
+lib-version build
 
 # Specify a package directory
-lib-version --package-dir ./my_package
+lib-version build --package-dir ./my_package
 
 # Specify output directory for build artifacts
-lib-version --output-dir ./build_output
+lib-version build --output-dir ./build_output
 
 # Override the version (bypasses git tag detection)
-lib-version --version 1.2.3
+lib-version build --version 1.2.3
 
 # Do not clean the output directory before building
-lib-version --no-clean
+lib-version build --no-clean
 ```
 
 #### Version Information
 
 ```bash
 # Get the current version (from git tag or version file)
-lib-version --get-version
+lib-version version current
 
 # Show version metadata (version, commit, branch, timestamp)
-lib-version --info
+lib-version info
 
 # Get the next development version (PEP 440 compliant)
-lib-version --get-dev-version
+lib-version version dev
 
 # Get the next patch version for a given major.minor (e.g., v1.2)
-lib-version --get-next-patch-version 1 2
+lib-version version next-patch 1 2
 
 # Get the next patch version based on the current version
-lib-version --get-next-version
+lib-version version next
 ```
 
 #### Version Management
 
 ```bash
 # Bump the version and create a tag (does not push by default)
-lib-version --bump patch
-lib-version --bump minor
-lib-version --bump major
+lib-version bump patch
+lib-version bump minor
+lib-version bump major
 
 # Create a new tag and optionally push it
-lib-version --create-tag v1.2.3
-lib-version --create-tag v1.2.3 --push
+lib-version tag 1.2.3
+lib-version tag 1.2.3 --push
 
 # Push tags created by bump or create-tag
-lib-version --bump patch --push
+lib-version bump patch --push
 ```
 
 ### Using in a Workflow (GitHub Actions Example)
@@ -121,12 +122,12 @@ You can use `lib-version` in your CI/CD workflows to automate versioning and pac
 
 - name: Build package with automatic versioning
   run: |
-    lib-version --package-dir . --output-dir dist
+    lib-version build --package-dir . --output-dir dist
 
 - name: Get package version
   id: get_version
   run: |
-    VERSION=$(lib-version --get-version)
+    VERSION=$(lib-version version current)
     echo "package_version=$VERSION" >> $GITHUB_OUTPUT
 ```
 
@@ -165,14 +166,14 @@ Or use the CLI in your build scripts or CI/CD pipelines.
 2. For releases:
     ```bash
     # Bump the minor version and push the new tag
-    lib-version --bump minor --push
+    lib-version bump minor --push
     # Build the package with the new version
-    lib-version
+    lib-version build
     ```
 3. For pre-releases from main:
     ```bash
     # Build with a development version
-    lib-version
+    lib-version build
     ```
 
 ### Version Tag Format

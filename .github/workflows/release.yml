@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - 'v*.*'       # Run for vX.Y or vX.Y.Z tags
-      # - 'v*.*.*'     # Run for semantic version tags
     branches:
       - main         # Run for main branch (will create pre-releases)
   pull_request:
@@ -62,14 +61,14 @@ jobs:
         run: |
           # For tagged builds (vX.Y or vX.Y.Z), the builder will handle version creation
           # For main branch builds, it will create a dev version
-          lib-version --package-dir .
+          lib-version build
           # List the built packages
           ls -la dist/
 
       - name: Get package version
         id: get_version
         run: |
-          VERSION=$(lib-version --get-version)
+          VERSION=$(lib-version version current)
           echo "package_version=$VERSION" >> $GITHUB_OUTPUT
           echo "Package version: $VERSION"
 
@@ -83,13 +82,33 @@ jobs:
           name: Release ${{ steps.get_version.outputs.package_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Calculate pre-release version
+        id: pre_version
+        run: |
+          NEXT_VERSION=$(lib-version version next)
+          PRE_VERSION="${NEXT_VERSION}-pre"
+          echo "pre_version=$PRE_VERSION" >> $GITHUB_OUTPUT
+          echo "Pre-release version: $PRE_VERSION"
 
-      # For non-tagged pushes to main (pre-releases)
+      # Clean dist directory
+      - name: Clean dist directory
+        run: |
+          rm -rf dist/*
+          echo "Cleaned dist directory"
+
+      # Build package for pre-release
+      - name: Build package for pre-release
+        run: |
+          lib-version build --dev
+          # List the built packages
+          ls -la dist/
+
+      # Create pre-release for all builds
       - name: Create Pre-release
-        if: github.ref == 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v1
         with:
           files: dist/*
           prerelease: true
-          tag_name: v${{ steps.get_version.outputs.package_version }}-pre
-          name: Pre-release ${{ steps.get_version.outputs.package_version }}
+          tag_name: v${{ steps.pre_version.outputs.pre_version }}-pre
+          name: Pre-release ${{ steps.pre_version.outputs.next_version }}
