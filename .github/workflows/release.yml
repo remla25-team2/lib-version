@@ -98,7 +98,8 @@ jobs:
         run: |
           NEXT_VERSION=$(lib-version version next)
           # Use timestamp from lib-version metadata (already in env)
-          TIMESTAMP_CLEAN=$(echo "${{ env.timestamp }}" | tr ' :' '-')
+          TIMESTAMP_RAW="${{ env.timestamp }}"
+          TIMESTAMP_CLEAN=$(echo "${TIMESTAMP_RAW}" | tr -d ' ' | tr ':' '-')
           PRE_VERSION="${NEXT_VERSION}-pre-${{TIMESTAMP_CLEAN} }}"
           echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
           echo "pre_version=$PRE_VERSION" >> $GITHUB_OUTPUT
