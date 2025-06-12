@@ -57,6 +57,16 @@ jobs:
           pip install build
           pip install -e .
 
+      - name: Set build metadata with lib-version
+        id: build_meta
+        run: |
+          # Get metadata and set as environment variables
+          lib-version version metadata >> $GITHUB_ENV
+          
+          # Also display for logging
+          echo "Build metadata from lib-version:"
+          lib-version version metadata
+
       - name: Build package
         run: |
           # For tagged builds (vX.Y or vX.Y.Z), the builder will handle version creation
@@ -87,7 +97,8 @@ jobs:
         id: pre_version
         run: |
           NEXT_VERSION=$(lib-version version next)
-          PRE_VERSION="${NEXT_VERSION}-pre"
+          # Use timestamp from lib-version metadata (already in env)
+          PRE_VERSION="${NEXT_VERSION}-pre-${{ env.timestamp }}"
           echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
           echo "pre_version=$PRE_VERSION" >> $GITHUB_OUTPUT
           echo "Pre-release version: $PRE_VERSION"
