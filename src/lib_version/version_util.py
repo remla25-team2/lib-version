@@ -270,22 +270,31 @@ class VersionUtil:
     @staticmethod
     def get_metadata():
         """Returns a dictionary with version metadata."""
+
+        timestamp_raw = subprocess.check_output(["date", "+%Y-%m-%d %H:%M:%S"]).decode().strip()
+
+        # Format timestamp for use in versions/metadata - replace spaces and colons with hyphens
+        timestamp_clean = timestamp_raw.replace(" ", "-").replace(":", "-")
+
         return {
             "version": VersionUtil.get_version(),
             "commit": VersionUtil.get_commit_hash(),
             "branch": VersionUtil.get_branch(),
-            "timestamp": subprocess.check_output(["date", "+%Y-%m-%d %H:%M:%S"]).decode().strip()
+            "timestamp": timestamp_clean
         }
     
     @staticmethod
     def _save_version(version):
         """Save the version to version.json"""
+
+        timestamp_raw = subprocess.check_output(["date", "+%Y-%m-%d %H:%M:%S"]).decode().strip()
+        # Format timestamp
+        timestamp_clean = timestamp_raw.replace(" ", "-").replace(":", "-")
         metadata = {
             "version": version,
             "commit": VersionUtil.get_commit_hash(),
             "branch": VersionUtil.get_branch(),
-            "timestamp": subprocess.check_output(["date", "+%Y-%m-%d %H:%M:%S"]).decode().strip()
-        }
+            "timestamp": timestamp_clean        }
         
         with open("version.json", "w") as f:
             json.dump(metadata, f, indent=2)
