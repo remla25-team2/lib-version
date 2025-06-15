@@ -97,11 +97,11 @@ jobs:
         id: pre_version
         run: |
           NEXT_VERSION=$(lib-version version next)
-          # Use timestamp from lib-version metadata (already in env)
-          PRE_VERSION="${NEXT_VERSION}-pre-${{ env.timestamp }}"
+          PRE_VERSION="${NEXT_VERSION}-pre-${timestamp}"
           echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
           echo "pre_version=$PRE_VERSION" >> $GITHUB_OUTPUT
           echo "Pre-release version: $PRE_VERSION"
+
 
       # Clean dist directory
       - name: Clean dist directory
